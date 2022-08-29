@@ -12,12 +12,12 @@ class Telemtry():
     latFile = "altitude"
     ldrFile = "ldr"
     tempretureFile = "tempreture"
-
     spi = SPI()
+
 
     def repeat(self,doSomeThing):
         doSomeThing()
-        Timer(2,self.repeat,args=(doSomeThing,)).start()
+        Timer(30,self.repeat,args=(doSomeThing,)).start()
 
      
     def __init__(self) :

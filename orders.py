@@ -12,3 +12,5 @@ getAllGallery = 'j'
 getVideoFor = 'f'
 getVideoAt = 'g'
 getImageAt = 'h'
+
+GEO = 'z'

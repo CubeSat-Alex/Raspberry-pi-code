@@ -57,10 +57,10 @@ def sendVideos():
         time.sleep(1)
         for file in files_in_dir:   
             client.sendVideo(f'{path}/{file}')
-        # payload.deleteVideos()
+            time.sleep(0.5)
+        payload.deleteVideos()
 
 def decodePacket(packet):
-    
     packet = packet.split(',')
     print("Packet Recived : {}".format(packet) )
     recived = ssp.packet2data(packet)
@@ -85,7 +85,9 @@ def decodePacket(packet):
     elif order == getStream :
         print('Start stream at: {}'.format(datetime.now()))
         print("order is to get Stream Now")
-        client.stream()
+        client.stream(0)
+    elif order == GEO:
+        client.stream("http://192.168.43.1:6677/videofeed?username=CCJDMAFKB&password=") 
     elif order == stopStream : 
         print("order is to stop Stream Now")
         client.stopStream()
@@ -94,6 +96,7 @@ def decodePacket(packet):
         data = telemtry.get()
         sendDtring(data)
         telemtry.delete()
+
     elif order == getImages :
         print("order is to get images now")
         sendImages()
@@ -111,9 +114,13 @@ def decodePacket(packet):
     elif order == getVideoAt :
         duration = recivedJson['args']['duration']
         time =  recivedJson['args']['time']
+        mission =  recivedJson['args']['mission']
+        angle =  recivedJson['args']['angle']
         print('order is to take video for {}'.format(duration)) 
-        payload.takeViderAt(time , duration)
+        payload.takeViderAt(time , duration,angle , mission)
     elif order == getImageAt :
         time =  recivedJson['args']['time']
-        print('order is to take video at {}'.format(time)) 
-        payload.takeImageAt(time)
+        mission =  recivedJson['args']['mission']
+        angle =  recivedJson['args']['angle']
+        print('order is to take image at {}'.format(time)) 
+        payload.takeImageAt(time,angle , mission)

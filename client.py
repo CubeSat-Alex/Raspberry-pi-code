@@ -27,15 +27,16 @@ class Client:
             return 0
           
     def sendFrame(self,frame):
+#         frame = cv2.resize(frame,(0,0),fx = 0.4, fy = 0.4)
         frame = imutils.resize(frame,width=320)
         a = pickle.dumps(frame)
         message = struct.pack("Q",len(a))+a
         self.clientSocket.sendall(message)
     
-    def stream(self):
+    def stream(self,where):
         while True:
             if self.clientSocket:
-                self.vid = cv2.VideoCapture(0)
+                self.vid = cv2.VideoCapture(where)
                 while(self.vid.isOpened()):
                     ret , frame = self.vid.read()
                     if ret == True:

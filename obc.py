@@ -98,11 +98,13 @@ def decodePacket(packet):
         print("order is get time now")
         now = datetime.now()
         data = now.strftime("%d/%m/%Y-%H.%M.%S,")
+        print("Time now in RPI is ",data)
         sendDtring(data)
     elif command == setTime :
         print("order is set time now")
         time = recivedJson['args']['time'] 
         dateTime = datetime.strptime(time, '%d/%m/%Y %H:%M:%S')
+        print("Requested time is " , time)
         clk_id = time.CLOCK_REALTIME
         time.clock_settime(clk_id, float(time.mktime(dateTime.timetuple())))
     elif command ==  setNextSession :
@@ -165,7 +167,7 @@ def decodePacket(packet):
         print("order is to get Logs now")
         data = logs.get()
         sendDtring(data)
-    elif command == deleteTelemetry :
+    elif command == deleteLogs :
         print("order is to delete logs")
         logs.delete()
     elif command == getImages :

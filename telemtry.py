@@ -74,6 +74,7 @@ class Telemtry():
             ttData = self.readFrom(Slave.TT,ARD_DATA)
             adcsData = self.readFrom(Slave.ADCS ,ARD_DATA )
         except :
+            print("error happened")
             return
 
         self.newLoaction(ttData)

@@ -3,6 +3,7 @@ import os
 imageFolder = "images"
 videosFolder = "videos"
 telemtryFolder = "telemetry"
+logsFiles = "logs"
 
 def createFolder(folderName):
     path = folderName

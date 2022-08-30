@@ -27,7 +27,6 @@ class Client:
             return 0
           
     def sendFrame(self,frame):
-#         frame = cv2.resize(frame,(0,0),fx = 0.4, fy = 0.4)
         frame = imutils.resize(frame,width=320)
         a = pickle.dumps(frame)
         message = struct.pack("Q",len(a))+a

@@ -1,13 +1,12 @@
+import time , threading , json
 from ssp import * 
 from pyload import *
 from orders import *
 from client import *
 from telemtry  import *
+from logs import *
 from datetime import datetime
 from subsytem_control import *
-import json
-
-
 
 isTelemetryOn = False 
 isAdcsOn = False
@@ -18,6 +17,7 @@ ssp = SSP()
 telemtry = Telemtry()
 control = SubSytemControl(telemtry)
 client = Client()
+logs = Logs()
 
 def sendDtring(data):
     jsonData = json.dumps(data)
@@ -52,7 +52,6 @@ def sendImages():
         for file in files_in_dir:   
             client.sendImage(f'{path}/{file}')
             time.sleep(0.5)
-        payload.deleteImages()
 
 def sendVideos():
     path = videosFolder
@@ -66,7 +65,6 @@ def sendVideos():
         for file in files_in_dir:   
             client.sendVideo(f'{path}/{file}')
             time.sleep(0.5)
-        payload.deleteVideos()
 
 def decodePacket(packet):
     packet = packet.split(',')
@@ -76,10 +74,9 @@ def decodePacket(packet):
 
     recivedJson = json.loads(recived)
     print("Json Data Recived : {}".format(recivedJson) )
-    order = recivedJson['order']
+    command = recivedJson['order']
 
-
-    if order == getImageNow :
+    if command == getImageNow :
         print("Order is to get image now and send it")
         start = datetime.now()
         frame = payload.takeImage()
@@ -90,43 +87,107 @@ def decodePacket(packet):
             print('Time after sending picture: {}'.format(datetime.now() - start))
         except :
             print("An error happened while takeing the photo")
-    elif order == getStream :
+    elif command == getStream :
         print('Start stream at: {}'.format(datetime.now()))
         print("order is to get Stream Now")
-        client.stream(0)
-    elif order == GEO:
-        client.stream("http://192.168.43.1:6677/videofeed?username=CCJDMAFKB&password=") 
-    elif order == stopStream : 
+        client.stream("http://192.168.43.1:6677/videofeed?username=CCJDMAFKB&password=")
+    elif command == stopStream : 
         print("order is to stop Stream Now")
         client.stopStream()
-    elif order == getTelemetry :
+    elif command == getTime :
+        print("order is get time now")
+        now = datetime.now()
+        data = now.strftime("%d/%m/%Y-%H.%M.%S,")
+        sendDtring(data)
+    elif command == setTime :
+        print("order is set time now")
+        time = recivedJson['args']['time'] 
+        dateTime = datetime.strptime(time, '%d/%m/%Y %H:%M:%S')
+        clk_id = time.CLOCK_REALTIME
+        time.clock_settime(clk_id, float(time.mktime(dateTime.timetuple())))
+    elif command ==  setNextSession :
+        print("order is set next session")
+        start = recivedJson['args']['start'] 
+        startTime = datetime.strptime(start, '%d/%m/%Y %H:%M:%S')
+        end = recivedJson['args']['end'] 
+        endTime = datetime.strptime(end, '%d/%m/%Y %H:%M:%S')
+        now = datetime.now()
+        toStart = (startTime - now).total_seconds()
+        duration = (endTime - now).total_seconds()
+
+        def nextSession(duration):
+            print("next session is now and end after",duration)
+            def closeSession():
+                print("session closed ") 
+            threading.Timer(duration, closeSession).start()
+
+        threading.Timer(toStart, nextSession ,args = (duration,)).start()
+    elif command == subsytemControl :
+        args = recivedJson['args']
+        subsytem = args['sys']
+        order = args['command']
+        if order == "ON" : 
+            if subsytem == "ADCS" :
+                control.ADCSOn()
+            else :
+                control.telemtryOn()
+        elif order == "OFF" :
+            if subsytem == "ADCS" :
+                control.ADCSOff()
+            else :
+                control.telemtryOff()
+        elif order == "RESET" :
+            if subsytem == "ADCS" :
+                control.adcsReset()
+            else :
+                control.telemtryReset()
+        elif order == "ANGLE" :
+            control.AdcsAngle(args['X'] , args ['Y'])
+    elif command == subsytemStatus :
+        sys = recivedJson['args']['sys']
+        if sys == "ADCS" :
+            control.testADCS()
+        else :
+            control.testTelemtry()
+    elif command == directTelemetry :
+        print("order is dirct telemtry ")
+        ttData = telemtry.readFrom(Slave.TT,ARD_DATA)
+        adcsData = telemtry.readFrom(Slave.ADCS ,ARD_DATA )
+        sendDtring({"TT" : ttData , "ADCS" : adcsData })
+    elif command == getTelemetry :
         print("order is to get Telemetry now")
         data = telemtry.get()
         sendDtring(data)
+    elif command == deleteTelemetry :
+        print("order is to delete telemetry")
         telemtry.delete()
-
-    elif order == getImages :
+    elif command == getLogs :
+        print("order is to get Logs now")
+        data = logs.get()
+        sendDtring(data)
+    elif command == deleteTelemetry :
+        print("order is to delete logs")
+        logs.delete()
+    elif command == getImages :
         print("order is to get images now")
         sendImages()
-    elif order == getVideos :
+    elif command == getVideos :
         print("order is to get videos Now")
         sendVideos()
-    elif order == getAllGallery :
-        print("order is to get iamges and videos now")
-        sendImages()
-        sendVideos()
-    elif order == getVideoFor :
-        duration = recivedJson['args']['duration']
-        print('order is to take video for {}'.format(duration)) 
-        payload.takeVideoForSeconds(duration)
-    elif order == getVideoAt :
+    elif command == deleteImages :
+        print("order is to delete videos Now")
+        payload.deleteImages()
+    elif command == deleteVideos :
+        print("order is to delete videos Now")
+        payload.deleteVideos()
+    elif command == getVideoAt :
         duration = recivedJson['args']['duration']
         time =  recivedJson['args']['time']
         mission =  recivedJson['args']['mission']
         angle =  recivedJson['args']['angle']
         print('order is to take video for {}'.format(duration)) 
         payload.takeViderAt(time , duration,angle , mission)
-    elif order == getImageAt :
+    elif command == getImageAt :
         time =  recivedJson['args']['time']
         mission =  recivedJson['args']['mission']
         angle =  recivedJson['args']['angle']

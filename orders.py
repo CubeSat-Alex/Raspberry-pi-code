@@ -1,21 +1,35 @@
+
+# GEO SATALITE 
 getImageNow = 'a'
 getStream = 'b'
-stopStream = 'i'
-getTelemetry = 'c'
+stopStream = 'c'
 
-getImages = 'd'
-getVideos = 'e'
+# direct 
+getTime = 'd'
+setTime = 'e'
+setNextSession = 'f'
 
-getAllGallery = 'j'
+subsytemControl = 'g'
+subsytemStatus = 'h'
+directTelemetry = 'i'
 
+# misision 
+getVideoAt = 'j'
+getImageAt = 'k'
 
-getVideoFor = 'f'
-getVideoAt = 'g'
-getImageAt = 'h'
+#playback
+getTelemetry = 'l'
+deleteTelemetry = 'm'
+getLogs = 'n'
+deleteLogs = 'o'
 
-GEO = 'z'
+# downloads 
+getImages = 'p'
+getVideos = 'q'
+deleteImages = 'r'
+deleteVideos = 's'
 
-#-----------------------------------------------#
+#----------------Subsytem control-------------------------------#
 ARD_DATA = "A"
 ARD_LED_ON = "X"
 ARD_LED_OFF = "Y"

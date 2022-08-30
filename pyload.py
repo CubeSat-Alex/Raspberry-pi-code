@@ -14,8 +14,8 @@ class Pyload:
         delay = (date_time_obj - now).total_seconds()
         return delay 
 
-    def takeImage(self):
-        cam = cv2.VideoCapture(0)
+    def takeImage(self , src = 0 ):
+        cam = cv2.VideoCapture(src)
         _, image = cam.read()
         cam.release()
         cv2.destroyAllWindows()

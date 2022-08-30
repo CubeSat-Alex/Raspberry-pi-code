@@ -4,11 +4,19 @@ from orders import *
 from client import *
 from telemtry  import *
 from datetime import datetime
+from subsytem_control import *
 import json
+
+
+
+isTelemetryOn = False 
+isAdcsOn = False
+isCameraOn = False 
 
 payload = Pyload()
 ssp = SSP()
 telemtry = Telemtry()
+control = SubSytemControl(telemtry)
 client = Client()
 
 def sendDtring(data):

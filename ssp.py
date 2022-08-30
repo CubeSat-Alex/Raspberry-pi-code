@@ -42,9 +42,9 @@ class SSP():
         low = data[-2]
         checksum = low + high
         data = data[0:-2]
-
         exceptCheckSum = (self.crc_calculator.calculate_checksum(bytes(data)))
-        if(True):#checksum ==  exceptCheckSum and data[0] == self.SRC.value):
+
+        if True :#checksum ==  exceptCheckSum and data[1] == self.SRC.value:
             data = data[3:]
             return ''.join(chr(i) for i in data)
 
@@ -53,22 +53,31 @@ class SSP():
         indexes = [index for (index, item) in enumerate(data) if item == 0xdb ]
         for i in indexes :
             if(data[i+1] == 0xdc):
-                data[i+1] = 0xdd 
+                try:
+                    data[i+1] = 0xdd
+                except :
+                    pass 
 
         # check if 0xc0 replace it with 0xdb 0xdc 
         indexes = [index for (index, item) in enumerate(data) if item == 0xc0 ]
         for i in indexes :
-            data[i] = 0xdb 
-            data.insert(i+1, 0xdc)
+            try :
+                data[i] = 0xdb 
+                data.insert(i+1, 0xdc)
+            except :
+                pass
         return data 
 
     def replaceFundinPacket(self,packet):
          # check if 0xc0 replace it with 0xdb 0xdc 
         indexes = [index for (index, item) in enumerate(packet) if item == 0xdb ]
         for i in indexes :
-            if(packet[i+1] == 0xdc):
-                packet[i] = 0xc0
-                del packet[i+1]
+            try :
+                if(packet[i+1] == 0xdc):
+                    packet[i] = 0xc0
+                    del packet[i+1]
+            except :
+                pass 
         # check if 0xdb 0xdd replace with 0xdb 0xdc
         indexes = [index for (index, item) in enumerate(packet) if item == 0xdb ]
         for i in indexes :

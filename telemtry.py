@@ -1,8 +1,10 @@
 from folders import *
 from datetime import datetime
 from spi import *
+import time 
 from threading import Timer
-
+import json
+from orders import *
 
 class Telemtry():
     accelerationFile = "acceleration"
@@ -14,17 +16,10 @@ class Telemtry():
     tempretureFile = "tempreture"
     spi = SPI()
 
-
-    def repeat(self,doSomeThing):
-        doSomeThing()
-        Timer(30,self.repeat,args=(doSomeThing,)).start()
-
-     
     def __init__(self) :
-        self.repeat(self.spi.readAll)
+        # pass
+        self.repeat(self.readAll)
         
-
-
     def timeNow(self) :
         now = datetime.now()
         return now.strftime("%d/%m/%Y-%H.%M.%S,")
@@ -46,17 +41,17 @@ class Telemtry():
     def newPresuure(self,pressure):
         self.addData(self.pressureFile , str(pressure))
     
-    def newAngles(self,x,y,z):
-        self.addData(self.angleFile , "{},{},{}".format(x,y,z))
+    def newAngles(self,a):
+        self.addData(self.angleFile , "{},{},{}".format(a['X'],a['Y'],a['Z']))
    
-    def newLoaction(self,lat,lang):
-        self.addData(self.gpsFile , "{},{},{}".format(lat,lang))
+    def newLoaction(self,location):
+        self.addData(self.gpsFile , "{},{}".format(location['X'],location['Y']))
     
     def neAltitude(self,alt):
         self.addData(self.latFile , str(alt))
     
-    def newlights(self,l1,l2,l3,l4):
-        self.addData(self.ldrFile , "{},{},{},{}".format(l1,l2,l3,l4))
+    def newlights(self,l):
+        self.addData(self.ldrFile , "{},{},{},{}".format(l['LDR1'],l['LDR2'],l['LDR3'],l['LDR4']))
    
     def newTempreture(self,temp):
         self.addData(self.tempretureFile , str(temp))
@@ -73,6 +68,37 @@ class Telemtry():
                 dict[name] = data
                 f.close()
         return dict
+    
+    def readAll(self):
+        try :
+            ttData = self.readFrom(Slave.TT,ARD_DATA)
+            adcsData = self.readFrom(Slave.ADCS ,ARD_DATA )
+        except :
+            return
+
+        self.newLoaction(ttData)
+        self.newlights(ttData)
+        self.neAltitude(ttData['A'])
+        self.newPresuure(ttData['P'])
+        self.newTempreture(ttData['T'])
+        
+        self.newAngles(adcsData)
+        self.newAcceleration(adcsData['A'])
+        
+    
+    def readFrom(self,slave,order):
+        time.sleep(0.1)
+        self.spi.write(order,slave)
+        data = self.spi.read(slave)
+        if(data == 'ERROR'): return 0
+        data = data.replace( '":','" : ').replace('{"' , '{ "').replace('",' , '" , ').replace("}" , " }")
+        data = json.loads(data)
+        return data 
+        
+        
+    def repeat(self,doSomeThing):
+        doSomeThing()
+        Timer(5,self.repeat,args=(doSomeThing,)).start()
 
     def delete(self):
         deleteFolder(telemtryFolder)

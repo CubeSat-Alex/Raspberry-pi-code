@@ -13,7 +13,7 @@ spi.open(0, 0)
 spi.max_speed_hz = 2000000
 
 # Send a null byte to check for value
-data = "give"
+data = "A"
 send_byte= ssp.data2Packet(data,Address.TT, Type.Read ,1)
 
 for x in send_byte:

@@ -26,59 +26,43 @@ class SPI:
 
     
     def write(self , data, slave):
-        print("SEND TO SUBSYTEM {}".format(slave))
+#         print("SEND TO SUBSYTEM {}".format(slave))
         GPIO.output(slave.value , GPIO.LOW )
-        packet = self.ssp.data2Packet(data,Address.TT, Type.Write,1)
+        address = Address.TT if slave == Slave.TT else Address.ADCS
+        packet = self.ssp.data2Packet(data,address, Type.Write,1)
 
         print("Data master want to send \n"+data)
-        print("packet send from master using spi\n",packet)
+#         print("packet send from master using spi\n",packet)
         for x in packet:
             self.spi.xfer2([x])
-
-       
+        time.sleep(1)
         self.spi.xfer2([0x23])
-        time.sleep(.1)
+        
         GPIO.output(slave.value , GPIO.HIGH )
 
         
-
     def read(self , slave):
-        print("get TO SUBSYTEM {}".format(slave))
+#         print("get TO SUBSYTEM {}".format(slave))
         GPIO.output(slave.value , GPIO.LOW )
         recieved= []
         i = 0
         counter=0
-        print("packet recieved from slave using spi")
+#         print("packet recieved from slave using spi")
         while True:
-            data=self.spi.xfer2([i])[0]
+            data=self.spi.xfer2([1])[0]
             i+=1
             recieved.append(data)
-            print(hex(data),end=',')
-            time.sleep(0.1)
-
+            
+#             print(hex(data),end=',')
+           
             if data == 192:
                 counter=counter+1
                 if counter==2:
                     counter=0
                     break
-        
-        print('\ndata from slave')
+                
+        print('data from slave')
         data = self.ssp.packet2data(recieved,1)
         GPIO.output(slave.value , GPIO.HIGH )
         print(data)
         return data
-
-
-    def readAll(self):
-        print("try")
-#         self.write("need" , Slave.ADCS)
-#         data = self.read(Slave.ADCS)
-#         self.write("give me data",Address.TT)
-#         ttData = self.read(Address.TT)
-#         time.sleep(0.1)
-#         self.write("give me data",Address.ADCS)
-#         adcsData = self.read(Address.ADCS)
-# 
-#         print(ttData)
-#         print(adcsData)
-        

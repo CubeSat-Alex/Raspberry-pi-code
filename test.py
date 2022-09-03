@@ -1,12 +1,6 @@
 from obc import *
 import json 
+from datetime import datetime
+import time
 
-
-
-data = { 'order' :  getTime }
-data = json.loads(data)
-packet = ssp.data2Packet(data)
-
-
-decodePacket(packet) 
-
+control.telemtryOn()

@@ -52,11 +52,11 @@ class SSP():
         # check if 0xdb 0xdc replace with 0xdb 0xdd
         indexes = [index for (index, item) in enumerate(data) if item == 0xdb ]
         for i in indexes :
-            if(data[i+1] == 0xdc):
-                try:
-                    data[i+1] = 0xdd
-                except :
-                    pass 
+            try:            
+                if(data[i+1] == 0xdc):
+                        data[i+1] = 0xdd
+            except :
+                pass 
 
         # check if 0xc0 replace it with 0xdb 0xdc 
         indexes = [index for (index, item) in enumerate(data) if item == 0xc0 ]
@@ -81,10 +81,10 @@ class SSP():
         # check if 0xdb 0xdd replace with 0xdb 0xdc
         indexes = [index for (index, item) in enumerate(packet) if item == 0xdb ]
         for i in indexes :
-            if(packet[i+1] == 0xdd):
-                try:
+            try :
+                if(packet[i+1] == 0xdd):
                     packet[i+1] = 0xdc
-                except :
+            except :
                     pass
         return packet 
 

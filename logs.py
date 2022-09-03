@@ -5,10 +5,10 @@ from datetime import datetime
 
 
 class Logs:
-    def addData(self ):
+    def addData(self , details , state):
         createFolder(logsFiles)
         f = open( logsFiles + "/log.txt" ,'a+')
-        data = self.timeNow() # complete data
+        data = self.timeNow() + ',' + details +',' + state
         f.seek(0)
         fileData = f.read(100)
         if len(fileData) > 0 :

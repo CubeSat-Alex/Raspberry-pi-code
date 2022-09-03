@@ -5,7 +5,12 @@ import time
 from threading import Timer
 import json
 from orders import *
+from shared_prefrence import *
 
+cache = Cache()
+numberOfSession = cache.get("orbit")
+
+ 
 class Telemtry():
     accelerationFile = "acceleration"
     pressureFile = "pressure"
@@ -17,7 +22,7 @@ class Telemtry():
     spi = SPI()
 
     def __init__(self) :
-        # pass
+#         pass
         self.repeat(self.readAll)
         
     def timeNow(self) :
@@ -27,7 +32,7 @@ class Telemtry():
     def addData(self ,file, data ):
         createFolder(telemtryFolder)
         f = open( telemtryFolder + "/" + file+ ".txt" ,'a+')
-        data = self.timeNow() + data
+        data = self.timeNow() + str(numberOfSession) + ","+ data
         f.seek(0)
         fileData = f.read(100)
         if len(fileData) > 0 :
@@ -70,11 +75,13 @@ class Telemtry():
         return dict
     
     def readAll(self):
+        print("Ordering telemetry data")
         try :
             ttData = self.readFrom(Slave.TT,ARD_DATA)
             adcsData = self.readFrom(Slave.ADCS ,ARD_DATA )
+            self.lastData = {"TT" : ttData , "ADCS" : adcsData }
+            print("Telemtery get done")
         except :
-            print("error happened")
             return
 
         self.newLoaction(ttData)
@@ -86,21 +93,34 @@ class Telemtry():
         self.newAngles(adcsData)
         self.newAcceleration(adcsData['A'])
         
-    
     def readFrom(self,slave,order):
+#         print(f"order is {order}")
         time.sleep(0.1)
         self.spi.write(order,slave)
         data = self.spi.read(slave)
         if(data == 'ERROR'): return 0
-        data = data.replace( '":','" : ').replace('{"' , '{ "').replace('",' , '" , ').replace("}" , " }")
-        data = json.loads(data)
+        data = data.replace( '":','": ').replace(',"' , ', "')
+        print(data)
+        data = json.loads(data.strip()[data.find('{'):])
         return data 
-        
         
     def repeat(self,doSomeThing):
         doSomeThing()
-        Timer(5,self.repeat,args=(doSomeThing,)).start()
+        Timer(2,self.repeat,args=(doSomeThing,)).start()
 
     def delete(self):
         deleteFolder(telemtryFolder)
     
+
+def repeat(doSomeThing):
+    doSomeThing()
+    Timer(30,repeat,args=(doSomeThing,)).start()
+
+
+def increaseOrbit():
+    global numberOfSession
+    numberOfSession += 1
+    cache.add("orbit" ,numberOfSession )
+    print(f"Number of orbit is {numberOfSession}")
+    
+repeat(increaseOrbit)

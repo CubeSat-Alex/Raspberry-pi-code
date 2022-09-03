@@ -1,4 +1,5 @@
-import time , threading , json
+import time as time
+import threading , json
 from ssp import * 
 from pyload import *
 from orders import *
@@ -6,24 +7,26 @@ from client import *
 from telemtry  import *
 from logs import *
 from datetime import datetime
-from subsytem_control import *
+import os
+from data import *
 
-isTelemetryOn = False 
-isAdcsOn = False
-isCameraOn = False 
-
-payload = Pyload()
 ssp = SSP()
 telemtry = Telemtry()
 control = SubSytemControl(telemtry)
+payload = Pyload(control)
 client = Client()
 logs = Logs()
+leds = ModesLed()
+
+isTelemetryOn = False 
+isAdcsOn = False
+isCameraOn = False
 
 def sendDtring(data):
     jsonData = json.dumps(data)
     print( "Data to sent "+ jsonData)
     packet = ssp.data2Packet(jsonData, Address.GS , Type.Read )
-    print("SSP Packet {}".format(packet))
+#     print("SSP Packet {}".format(packet))
     packet = ','.join([str(elem) for elem in  packet])
     lenght = len(packet)
     start = 0 
@@ -68,9 +71,9 @@ def sendVideos():
 
 def decodePacket(packet):
     packet = packet.split(',')
-    print("Packet Recived : {}".format(packet) )
+#     print("Packet Recived : {}".format(packet) )
     recived = ssp.packet2data(packet)
-    print(recived)
+#     print(recived)
 
     recivedJson = json.loads(recived)
     print("Json Data Recived : {}".format(recivedJson) )
@@ -97,22 +100,24 @@ def decodePacket(packet):
     elif command == getTime :
         print("order is get time now")
         now = datetime.now()
-        data = now.strftime("%d/%m/%Y-%H.%M.%S,")
+        data = now.strftime("%d-%m-%Y %H:%M:%S")
         print("Time now in RPI is ",data)
         sendDtring(data)
     elif command == setTime :
         print("order is set time now")
-        time = recivedJson['args']['time'] 
-        dateTime = datetime.strptime(time, '%d/%m/%Y %H:%M:%S')
-        print("Requested time is " , time)
-        clk_id = time.CLOCK_REALTIME
-        time.clock_settime(clk_id, float(time.mktime(dateTime.timetuple())))
+        wanted_time = recivedJson['args']['time'] 
+        dateTime = datetime.strptime(wanted_time, '%d-%m-%Y %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+        print("Requested time is " , dateTime)
+#         os.system("sudo systemctl stop systemd-timesyncd")
+#         os.system("sudo systemctl disable systemd-timesyncd")
+        print(os.system("sudo date -s '{}'".format(dateTime)))
+#         print(datetime.now())
     elif command ==  setNextSession :
         print("order is set next session")
         start = recivedJson['args']['start'] 
-        startTime = datetime.strptime(start, '%d/%m/%Y %H:%M:%S')
+        startTime = datetime.strptime(start, '%d-%m-%Y %H:%M:%S')
         end = recivedJson['args']['end'] 
-        endTime = datetime.strptime(end, '%d/%m/%Y %H:%M:%S')
+        endTime = datetime.strptime(end, '%d-%m-%Y %H:%M:%S')
         now = datetime.now()
         toStart = (startTime - now).total_seconds()
         duration = (endTime - now).total_seconds()
@@ -125,7 +130,9 @@ def decodePacket(packet):
 
         threading.Timer(toStart, nextSession ,args = (duration,)).start()
     elif command == subsytemControl :
+        print("Subsytem control")
         args = recivedJson['args']
+        print("arguments")
         subsytem = args['sys']
         order = args['command']
         if order == "ON" : 
@@ -143,7 +150,13 @@ def decodePacket(packet):
                 control.adcsReset()
             else :
                 control.telemtryReset()
-        elif order == "ANGLE" :
+        elif order == "LIVE" :
+            if subsytem == "ADCS" :
+                control.testADCS()
+            else :
+                control.testTelemtry()
+        elif order == "angle" :
+            print(f"X {args['X']} , Y{args['Y']} ")
             control.AdcsAngle(args['X'] , args ['Y'])
     elif command == subsytemStatus :
         sys = recivedJson['args']['sys']
@@ -152,10 +165,8 @@ def decodePacket(packet):
         else :
             control.testTelemtry()
     elif command == directTelemetry :
-        print("order is dirct telemtry ")
-        ttData = telemtry.readFrom(Slave.TT,ARD_DATA)
-        adcsData = telemtry.readFrom(Slave.ADCS ,ARD_DATA )
-        sendDtring({"TT" : ttData , "ADCS" : adcsData })
+        print("Direct telemtry orderd")
+        sendDtring(telemtry.lastData)
     elif command == getTelemetry :
         print("order is to get Telemetry now")
         data = telemtry.get()
@@ -186,12 +197,14 @@ def decodePacket(packet):
         duration = recivedJson['args']['duration']
         time =  recivedJson['args']['time']
         mission =  recivedJson['args']['mission']
-        angle =  recivedJson['args']['angle']
+        x =  recivedJson['args']['X']
+        y =  recivedJson['args']['Y']
         print('order is to take video for {}'.format(duration)) 
-        payload.takeViderAt(time , duration,angle , mission)
+        payload.takeViderAt(time , duration,x,y , mission)
     elif command == getImageAt :
         time =  recivedJson['args']['time']
         mission =  recivedJson['args']['mission']
-        angle =  recivedJson['args']['angle']
+        x =  recivedJson['args']['X']
+        y =  recivedJson['args']['Y']
         print('order is to take image at {}'.format(time)) 
-        payload.takeImageAt(time,angle , mission)
+        payload.takeImageAt(time,x,y , mission)

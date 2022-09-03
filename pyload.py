@@ -4,6 +4,10 @@ import time,threading,cv2
 from folders import *
 
 class Pyload:
+    
+    def __init__(self , control) :
+        self.control = control
+    
     def timeNow(self) :
         now = datetime.now()
         return now.strftime("%d_%m_%Y %H_%M_%S")
@@ -28,12 +32,14 @@ class Pyload:
     
         cv2.imwrite( fileName , frame)
 
-    def TakeImageAndSave(self,angle , mission):
+    def TakeImageAndSave(self,x,y, mission):
         print("take image")
+        self.control.AdcsAngle(x,y)
         img = self.takeImage()
         self.saveImage(img,angle , mission)
 
-    def takeVideoForSeconds(self,duration,angle , mission) :
+    def takeVideoForSeconds(self,duration,x,y , mission) :
+        self.control.AdcsAngle(x,y)
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         createFolder(videosFolder)
         videoName = [self.timeNow() , mission + str(duration) + angle].join(".")
@@ -58,15 +64,15 @@ class Pyload:
             ret, frame = cap.read()
             out.write(frame)
     
-    def takeViderAt(self,time,duration,angle , mission ):
+    def takeViderAt(self,time,duration,x,y , mission ):
         delay = self.calculateDelay(time)
         print(delay)
-        threading.Timer(delay, self.takeVideoForSeconds , args=(duration,angle , mission)).start()
+        threading.Timer(delay - 1 , self.takeVideoForSeconds , args=(duration,x,y , mission)).start()
     
-    def takeImageAt(self,time,angle , mission):
+    def takeImageAt(self,time,x,y , mission):
         delay = self.calculateDelay(time)
         print(delay)
-        threading.Timer(delay, self.TakeImageAndSave ,angle , mission).start()
+        threading.Timer(delay - 1, self.TakeImageAndSave ,x,y , mission).start()
     
     def deleteImages(self):
         deleteFolder(imageFolder)

@@ -33,7 +33,7 @@ class ModesLed:
 
 
 leds = ModesLed()
-leds.allOff()
+leds.allOn()
 
             
         

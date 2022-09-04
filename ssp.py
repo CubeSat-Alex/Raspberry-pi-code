@@ -1,8 +1,6 @@
 import enum
 from crc import CrcCalculator, Crc16
 
-
-
 class   Address(enum.Enum):
    GS = 0x00
    OBC = 0X01
@@ -88,7 +86,4 @@ class SSP():
                     pass
         return packet 
 
-        
-    
-
-    
+ssp = SSP()

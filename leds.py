@@ -3,10 +3,10 @@ import enum
 
 
 class Leds(enum.Enum):
-   GREEN = 18
-   RED = 23
-   BLUE = 24
-   YELLOW = 25
+   Connection = 18 # connection
+   Session = 23 # session 
+   Download = 24 # downloading 
+   Stream = 25 # streaming
 
 
 class ModesLed:
@@ -33,7 +33,6 @@ class ModesLed:
 
 
 leds = ModesLed()
-leds.allOn()
 
             
         

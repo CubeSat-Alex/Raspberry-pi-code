@@ -1,4 +1,3 @@
-
 # GEO SATALITE 
 getImageNow = 'a'
 getStream = 'b'
@@ -28,6 +27,7 @@ getImages = 'p'
 getVideos = 'q'
 deleteImages = 'r'
 deleteVideos = 's'
+getStorages = 't'
 
 #----------------Subsytem control-------------------------------#
 ARD_DATA = "A"

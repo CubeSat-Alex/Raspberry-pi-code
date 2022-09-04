@@ -5,10 +5,8 @@ import time
 from threading import Timer
 import json
 from orders import *
-from shared_prefrence import *
+from logs import *
 
-cache = Cache()
-numberOfSession = cache.get("orbit")
 
  
 class Telemtry():
@@ -19,10 +17,12 @@ class Telemtry():
     latFile = "altitude"
     ldrFile = "ldr"
     tempretureFile = "tempreture"
-    spi = SPI()
+
+    def __init__(self,ssp):
+        self.spi = SPI(ssp)
+    
 
     def __init__(self) :
-#         pass
         self.repeat(self.readAll)
         
     def timeNow(self) :
@@ -75,13 +75,16 @@ class Telemtry():
         return dict
     
     def readAll(self):
-        print("Ordering telemetry data")
+        log.add("Collecting Telemtry data" , LogState.Loading)
+        print("Ordering telemetry data ..... " , end="")
         try :
             ttData = self.readFrom(Slave.TT,ARD_DATA)
             adcsData = self.readFrom(Slave.ADCS ,ARD_DATA )
             self.lastData = {"TT" : ttData , "ADCS" : adcsData }
+            log.add("Collecting Telemtry data" , LogState.Done)
             print("Telemtery get done")
         except :
+            log.add("Collecting Telemtry data" , LogState.Error)
             return
 
         self.newLoaction(ttData)
@@ -94,13 +97,10 @@ class Telemtry():
         self.newAcceleration(adcsData['A'])
         
     def readFrom(self,slave,order):
-#         print(f"order is {order}")
         time.sleep(0.1)
         self.spi.write(order,slave)
         data = self.spi.read(slave)
-        if(data == 'ERROR'): return 0
         data = data.replace( '":','": ').replace(',"' , ', "')
-        print(data)
         data = json.loads(data.strip()[data.find('{'):])
         return data 
         
@@ -109,18 +109,8 @@ class Telemtry():
         Timer(2,self.repeat,args=(doSomeThing,)).start()
 
     def delete(self):
+        log.add(f"Telemtry Deleting " , LogState.Loading)
         deleteFolder(telemtryFolder)
-    
+        log.add(f"Telemtry Deleted succesfully" , LogState.Done)
 
-def repeat(doSomeThing):
-    doSomeThing()
-    Timer(30,repeat,args=(doSomeThing,)).start()
-
-
-def increaseOrbit():
-    global numberOfSession
-    numberOfSession += 1
-    cache.add("orbit" ,numberOfSession )
-    print(f"Number of orbit is {numberOfSession}")
-    
-repeat(increaseOrbit)
+telemtry = Telemtry(ssp)

@@ -1,6 +1,3 @@
-from obc import *
-import json 
-from datetime import datetime
-import time
+from subsytem_control import *
 
-control.telemtryOn()
+control.ADCSOn()

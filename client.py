@@ -42,7 +42,6 @@ class Client:
                         start = datetime.now()
                         self.sendFrame(frame)
                         print('Time after sending frame: {}'.format(datetime.now()- start))
-
                 else: 
                     break
     
@@ -73,3 +72,5 @@ class Client:
 
     def dispose(self):
         self.serverSocket.close()
+
+client = Client()

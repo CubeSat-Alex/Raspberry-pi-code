@@ -1,11 +1,9 @@
 import json
 
-
 class Cache:
     def add(self , key , value):
         f = open( "cache.txt" ,'r+')
         data = f.read()
-        print(len(data))
         if len(data) == 1 :
             data = {}
         else :  
@@ -29,4 +27,3 @@ class Cache:
             value = 0 
         f.close()
         return value 
-

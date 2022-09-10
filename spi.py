@@ -11,11 +11,9 @@ class Slave(enum.Enum):
    ADCS = 15
 
 class SPI:
-    telemtryBusy = False 
-    adcsBusy = False 
+    spiBusy = False 
 
-    def __init__(self , ssp):
-        self.ssp = ssp 
+    def __init__(self):
         self.spi = spidev.SpiDev()
         self.spi.open(0, 0)
         self.spi.max_speed_hz = 2000000
@@ -29,25 +27,16 @@ class SPI:
 
     
     def write(self , data, slave):
-        if slave.value == Slave.ADCS :
-            print("ADCS is in onther use")
-            while self.adcsBusy :
-                print("." , end="")
-                pass 
-            print("\n----------------------------------")
-            self.adcsBusy = True
-        else :
-            print("TT&M is in onther use")
-            while self.telemtryBusy :
-                print("." , end="")
-                pass 
-            print("\n----------------------------------")
-            self.telemtryBusy = True
+        print(data)
+        while self.spiBusy :
+            print("." , end="")
+            
+        self.spiBusy = True
 
 #         print("SEND TO SUBSYTEM {}".format(slave))
         GPIO.output(slave.value , GPIO.LOW )
         address = Address.TT if slave == Slave.TT else Address.ADCS
-        packet = self.ssp.data2Packet(data,address, Type.Write,1)
+        packet = ssp.data2Packet(data,address, Type.Write,1)
 
 #         print("Data master want to connect with to  ",slave)
 #         print("packet send from master using spi\n",packet)
@@ -70,18 +59,17 @@ class SPI:
         while True:
             data=self.spi.xfer2([1])[0]
             i+=1
+            print(data , end = ',')
             recieved.append(data)
 
             if data == lastValue :
-                 valueCounter =+1 
-                 if valueCounter == 10 :
+#                  print("duplicate")
+                 valueCounter +=1 
+                 if valueCounter == 30 :
                     log.add(f"SPI canceled operation because repeat of {lastValue} " , LogState.Error)
                     print("SPI Canceled operation")
-                    if slave == Slave.ADCS :
-                        self.adcsBusy = False 
-                    else :
-                        self.telemtryBusy = False
-                    return "ERROR"
+                    self.spiBusy = False
+                    return "ERROR" 
             else :
                 valueCounter = 0
             
@@ -93,15 +81,12 @@ class SPI:
                     counter=0
                     break
         
-        if slave == Slave.ADCS :
-            self.adcsBusy = False 
-        else :
-            self.telemtryBusy = False
+        self.spiBusy = False
                 
-        # print('data from slave')
-        data = self.ssp.packet2data(recieved,1)
+#         print('data from slave')
+        data = ssp.packet2data(recieved,1)
         GPIO.output(slave.value , GPIO.HIGH )
-        # print(data)
+#         print(data)
         return data
 
 spi = SPI()

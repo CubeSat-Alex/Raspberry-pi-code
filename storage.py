@@ -16,22 +16,17 @@ class Storage :
         for dirpath, _, filenames in os.walk(start_path):
             for f in filenames:
                 fp = os.path.join(dirpath, f)
-                # skip if it is symbolic link
                 if not os.path.islink(fp):
                     total_size += os.path.getsize(fp)
-
         return total_size
 
 
     def getStorage(self):
         return  {
             "Images" : self.getSize(imageFolder) ,
-            "Videos" : self.getSize(videosFolder) ,
+            "Videos" : self.getSize(videosFolder),
             "Telemtry" : self.getSize(telemtryFolder) ,
-            "logs" : self.getSize(logsFiles) 
+            "Logs" : self.getSize(logsFiles)
             }
-          
-    
-
     
 storage = Storage()

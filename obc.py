@@ -13,8 +13,12 @@ from leds import *
 import os
 from storage import *
 
+streamIp = "192.168.43.1"
+streamName = "CCJDMAAAFKB"
+
 
 def sendDtring(data):
+    timeNow = datetime.now()
     leds.ledOn(Leds.Download)
     jsonData = json.dumps(data)
     print( "Data to sent "+ jsonData)
@@ -34,6 +38,7 @@ def sendDtring(data):
         if( end >= lenght):
             print("data send succesfully")
             client.senData("end of data")
+            print(datetime.now() - timeNow)
             leds.ledOf(Leds.Download)
             break 
 
@@ -46,11 +51,14 @@ def sendImages():
         imageLenght = len(files_in_dir)
         data = {"imageLenght" : imageLenght  , "imagesNames" : files_in_dir}
         sendDtring(data)
+        print(f"number of images is {imageLenght} ")
         leds.ledOn(Leds.Download)
-        time.sleep(1)
-        for file in files_in_dir:   
+        time.sleep(0.1)
+        for file in files_in_dir:
+            now = datetime.now()
             client.sendImage(f'{path}/{file}')
-            time.sleep(0.5)
+            print(f"image take {datetime.now() - now}")
+            time.sleep(0.1)
     
     leds.ledOf(Leds.Download)
 
@@ -63,23 +71,33 @@ def sendVideos():
         videosLenght = len(files_in_dir)
         data = {"videosLenght" : videosLenght  , "VideosNames" : files_in_dir}
         sendDtring(data)
+        print(f"number of videos is {videosLenght} ")
         leds.ledOn(Leds.Download)
         time.sleep(1)
-        for file in files_in_dir:   
+        for file in files_in_dir:
+            now = datetime.now()
             client.sendVideo(f'{path}/{file}')
-            time.sleep(0.5)
+            print(f"video take {datetime.now() - now}")
+            time.sleep(2)
     leds.ledOf(Leds.Download)
 
 def decodePacket(packet):
-    packet = packet.split(',')
-    recived = ssp.packet2data(packet)
+    try :
+        packet = packet.split(',')
+        recived = ssp.packet2data(packet)
+    except :
+        return 
 
     recivedJson = json.loads(recived)
-    print("Json Data Recived : {}".format(recivedJson) )
-    log.add("An order recieved with data {}".format(recivedJson) , LogState.Done)
+#     print("Json Data Recived : {}".format(recivedJson) )
+#     log.add("An order recieved with data {}".format(recivedJson) , LogState.Done)
     command = recivedJson['order']
 
-    if command == getImageNow :
+    if command == ping :
+        pass
+#         print("Server checked me")
+#         log.add("Server ping recieved", LogState.Done)
+    elif command == getImageNow :
         print("Order is to get image now and send it")
         frame = payload.takeImage()
         try :
@@ -93,11 +111,14 @@ def decodePacket(packet):
         log.add("Start Stream request", LogState.Loading)
         print('Start stream at: {}'.format(datetime.now()))
         print("order is to get Stream Now")
-        try :
-            client.stream("http://192.168.43.1:6677/videofeed?username=CCJDMAFKB&password=")
-        except :
-            leds.ledOf(Leds.Stream)
-            log.add("An error hapeened while streaming" , LogState.Error)
+#         try :
+        streamUrl = "http://"+streamIp+":6677/videofeed?username="+streamName+"&password="
+        print(streamUrl)
+        client.stream(streamUrl)
+#         except :
+#             print("error at streaming")
+#             leds.ledOf(Leds.Stream)
+#             log.add("An error hapeened while streaming" , LogState.Error)
     elif command == stopStream : 
         leds.ledOf(Leds.Stream)
         print("order is to stop Stream Now")
@@ -112,8 +133,8 @@ def decodePacket(packet):
         sendDtring(data)
     elif command == setTime :
         print("order is set time now")
-        wanted_time = recivedJson['args']['time'] 
-        log.add(f"set OBC time from {dateTime.now()} to {wanted_time}" , LogState.Done)
+        wanted_time = recivedJson['args']['requestTime'] 
+        log.add(f"set OBC time from {datetime.now()} to {wanted_time}" , LogState.Done)
         dateTime = datetime.strptime(wanted_time, '%d-%m-%Y %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
         print("Requested time is " , dateTime)
 #         os.system("sudo systemctl stop systemd-timesyncd")
@@ -170,7 +191,7 @@ def decodePacket(packet):
             else :
                 control.testTelemtry()
         elif order == "angle" :
-            print(f"X {args['X']} , Y{args['Y']} ")
+            print(f"X {args['X']} , Y {args['Y']} ")
             control.AdcsAngle(args['X'] , args ['Y'])
     elif command == subsytemStatus :
         sys = recivedJson['args']['sys']
@@ -205,8 +226,9 @@ def decodePacket(packet):
         log.add("Sending Videos to ground station " , LogState.Done)
         print("order is to get videos Now")
         sendVideos()
+        print("sending finished")
     elif command == deleteImages :
-        print("order is to delete videos Now")
+        print("order is to delete images Now")
         payload.deleteImages()
     elif command == deleteVideos :
         print("order is to delete videos Now")
@@ -227,5 +249,4 @@ def decodePacket(packet):
         print('order is to take image at {}'.format(time)) 
         payload.takeImageAt(time,x,y , mission)
     elif command == getStorages :
-
         sendDtring(storage.getStorage())

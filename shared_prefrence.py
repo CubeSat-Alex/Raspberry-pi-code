@@ -6,10 +6,11 @@ class Cache:
         data = f.read()
         if len(data) == 1 :
             data = {}
-        else :  
+        else :
             data = json.loads(data)
         data[key] = value
         f.seek(0)
+        f.truncate() 
         data = json.dumps(data)
         f.write(data)
         f.close()

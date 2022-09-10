@@ -3,6 +3,7 @@ from datetime import datetime
 from threading import Timer
 import enum
 from shared_prefrence import *
+from storage import storage
 
 cache = Cache()
 numberOfSession = cache.get("orbit")
@@ -34,7 +35,10 @@ class Logs:
         data = ''
         if isExist:
             f = open( logsFiles + "/log.txt" ,'r')
-            data = f.read() 
+            data = f.read()
+            lenght = data.count('\n')
+            print(f'number of logs is {lenght}')
+            print(f"logs storage is {storage.getSize(logsFiles)} byte")
             f.close()
         return data
 
@@ -60,6 +64,6 @@ def increaseOrbit():
     numberOfSession += 1
     cache.add("orbit" ,numberOfSession )
     log.add(f"Orbit increase to {numberOfSession}" , LogState.Done)
-    print(f"Number of orbit is {numberOfSession}")
+#     print(f"Number of orbit is {numberOfSession}")
     
 repeat(increaseOrbit)

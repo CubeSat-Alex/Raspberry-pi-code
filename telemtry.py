@@ -7,6 +7,8 @@ import json
 from orders import *
 from logs import *
 
+telemtryDelay = 0
+collect =True 
 
  
 class Telemtry():
@@ -18,12 +20,11 @@ class Telemtry():
     ldrFile = "ldr"
     tempretureFile = "tempreture"
 
-    def __init__(self,ssp):
-        self.spi = SPI(ssp)
-    
-
     def __init__(self) :
-        self.repeat(self.readAll)
+        if collect :
+          self.repeat(self.readAll)
+        else:
+            pass
         
     def timeNow(self) :
         now = datetime.now()
@@ -65,52 +66,59 @@ class Telemtry():
         isExist = os.path.exists(telemtryFolder)
         dict = {}
         if isExist:
+            print(f"logs storage is {storage.getSize(telemtryFolder)} byte")
+
             files_in_dir = os.listdir(telemtryFolder)
             for file in files_in_dir:   
                 name = file.replace(".txt" , '')
                 f = open(f'{telemtryFolder}/{file}' , 'r') 
-                data = f.read() 
+                data = f.read()
+                lenght = data.count("\n")
+                print(f'number of {name} telemtry is {lenght}')
                 dict[name] = data
                 f.close()
         return dict
     
     def readAll(self):
         log.add("Collecting Telemtry data" , LogState.Loading)
-        print("Ordering telemetry data ..... " , end="")
+        print("Ordering telemetry data ..... ")
         try :
             ttData = self.readFrom(Slave.TT,ARD_DATA)
             adcsData = self.readFrom(Slave.ADCS ,ARD_DATA )
-            self.lastData = {"TT" : ttData , "ADCS" : adcsData }
-            log.add("Collecting Telemtry data" , LogState.Done)
-            print("Telemtery get done")
         except :
             log.add("Collecting Telemtry data" , LogState.Error)
             return
+        if len(ttData) == 9 and len(adcsData) == 4 :
+            self.newLoaction(ttData)
+            self.newlights(ttData)
+            self.neAltitude(ttData['A'])
+            self.newPresuure(ttData['P'])
+            self.newTempreture(ttData['T'])
+                
+            self.newAngles(adcsData)
+            self.newAcceleration(adcsData['A'])
+            self.lastData = {"TT" : ttData , "ADCS" : adcsData }
+            print("Telemtery get done ")
+            log.add("Collecting Telemtry data" , LogState.Done)
+            
 
-        self.newLoaction(ttData)
-        self.newlights(ttData)
-        self.neAltitude(ttData['A'])
-        self.newPresuure(ttData['P'])
-        self.newTempreture(ttData['T'])
-        
-        self.newAngles(adcsData)
-        self.newAcceleration(adcsData['A'])
         
     def readFrom(self,slave,order):
         time.sleep(0.1)
-        self.spi.write(order,slave)
-        data = self.spi.read(slave)
-        data = data.replace( '":','": ').replace(',"' , ', "')
+        spi.write(order,slave)
+        data = spi.read(slave)
+        print(data)
+        data = data.replace( '":','": ').replace(',"' , ', "').replace(",}","}")
         data = json.loads(data.strip()[data.find('{'):])
         return data 
         
     def repeat(self,doSomeThing):
         doSomeThing()
-        Timer(2,self.repeat,args=(doSomeThing,)).start()
+        Timer(telemtryDelay,self.repeat,args=(doSomeThing,)).start()
 
     def delete(self):
         log.add(f"Telemtry Deleting " , LogState.Loading)
         deleteFolder(telemtryFolder)
         log.add(f"Telemtry Deleted succesfully" , LogState.Done)
 
-telemtry = Telemtry(ssp)
+telemtry = Telemtry()

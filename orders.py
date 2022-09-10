@@ -29,6 +29,8 @@ deleteImages = 'r'
 deleteVideos = 's'
 getStorages = 't'
 
+ping = 'u'
+
 #----------------Subsytem control-------------------------------#
 ARD_DATA = "A"
 ARD_LED_ON = "X"

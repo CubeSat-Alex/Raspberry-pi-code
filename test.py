@@ -1,3 +1,5 @@
 from subsytem_control import *
 
-control.ADCSOn()
+control.ADCSOff()
+control.telemtryOff()
+control.AdcsAngle(20,20)

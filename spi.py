@@ -4,6 +4,7 @@ import enum
 from ssp import *
 import time
 from logs import *
+from orders import *
 
 
 class Slave(enum.Enum):
@@ -27,9 +28,12 @@ class SPI:
 
     
     def write(self , data, slave):
-        print(data)
+#         print(data)
         while self.spiBusy :
-            print("." , end="")
+            if(data == ARD_DATA) :
+                return
+#             print(".",end="")
+            continue
             
         self.spiBusy = True
 
@@ -59,7 +63,7 @@ class SPI:
         while True:
             data=self.spi.xfer2([1])[0]
             i+=1
-            print(data , end = ',')
+#             print(data , end = ',')
             recieved.append(data)
 
             if data == lastValue :
@@ -67,7 +71,6 @@ class SPI:
                  valueCounter +=1 
                  if valueCounter == 30 :
                     log.add(f"SPI canceled operation because repeat of {lastValue} " , LogState.Error)
-                    print("SPI Canceled operation")
                     self.spiBusy = False
                     return "ERROR" 
             else :

@@ -108,20 +108,24 @@ class SubSytemControl:
         
     def AdcsAngle(self,x,y):
         log.add(f"Set ADCS angle to {x},{y} " , LogState.Loading)
-        if int(x)==self.x and int(y)== self.y :
-            return
-        
-        spi.write("{},{}".format(int(x),int(y)) , Slave.ADCS)
-        reading = spi.read(Slave.ADCS)
+#         if int(x)==self.x and int(y)== self.y :
+#             return
+        print("angles {},{}".format(int(x),int(y)))
+        for i in range(2):
+#             print(f"try {i}")
+            spi.write("{},{}".format(int(x),int(y)) , Slave.ADCS)
+            reading = spi.read(Slave.ADCS)
+
+            if(reading == "OK"):
+                self.x  = int(x)
+                self.y = int(y)
+                cache.add('x' , self.x )
+                cache.add('y',self.y )
+                log.add(f"ADCS angle to {x},{y} set sucessfully" , LogState.Done)
+                break 
+            else :
+                log.add(f"ADCS angle to {x},{y} doesn't set with {reading}" , LogState.Error)
         print(reading)
-        if(reading == "OK"):
-            self.x  = int(x)
-            self.y = int(y)
-            cache.add('x' , self.x )
-            cache.add('y',self.y )
-            log.add(f"ADCS angle to {x},{y} set sucessfully" , LogState.Done)
-        else :
-            log.add(f"ADCS angle to {x},{y} doesn't set with {reading}" , LogState.Error)
         return reading == "OK"
 
 control = SubSytemControl()

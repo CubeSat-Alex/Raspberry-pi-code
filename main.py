@@ -7,13 +7,14 @@ leds.allOff()
 
 while True :
     try:
-        print("try to connect")
+#         print("try to connect")
         client.connect()
         break
     except :
+        client.dispose()
         continue 
     
-print("connected")
+# print("connected")
 leds.ledOn(Leds.Connection)
 
 while True:

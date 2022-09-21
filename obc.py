@@ -23,7 +23,7 @@ def sendDtring(data):
     jsonData = json.dumps(data)
     print( "Data to sent "+ jsonData)
     packet = ssp.data2Packet(jsonData, Address.GS , Type.Read )
-#     print("SSP Packet {}".format(packet))
+#     print("recieved SSP Packet {}".format(packet))
     packet = ','.join([str(elem) for elem in  packet])
     lenght = len(packet)
     start = 0 
@@ -58,7 +58,7 @@ def sendImages():
             now = datetime.now()
             client.sendImage(f'{path}/{file}')
             print(f"image take {datetime.now() - now}")
-            time.sleep(0.1)
+            time.sleep(0.5)
     
     leds.ledOf(Leds.Download)
 
@@ -89,9 +89,11 @@ def decodePacket(packet):
         return 
 
     recivedJson = json.loads(recived)
-#     print("Json Data Recived : {}".format(recivedJson) )
-#     log.add("An order recieved with data {}".format(recivedJson) , LogState.Done)
     command = recivedJson['order']
+    if command != ping :
+        print("revived SSPV2 Packet  : {}".format(packet))
+        print("decodded Data Recived : {}".format(recivedJson) )
+        log.add("An order recieved with data {}".format(recivedJson) , LogState.Done)
 
     if command == ping :
         pass
@@ -102,7 +104,8 @@ def decodePacket(packet):
         frame = payload.takeImage()
         try :
             print("Image taked succesfully , sending")
-            client.sendFrame(frame)
+            start = datetime.now() 
+            client.sendFrame(frame,True)
             print('Time after sending picture: {}'.format(datetime.now() - start))
         except :
             print("An error happened while takeing the photo")
@@ -112,9 +115,8 @@ def decodePacket(packet):
         print('Start stream at: {}'.format(datetime.now()))
         print("order is to get Stream Now")
 #         try :
-        streamUrl = "http://"+streamIp+":6677/videofeed?username="+streamName+"&password="
-        print(streamUrl)
-        client.stream(streamUrl)
+#         streamUrl = "http://"+streamIp+":6677/videofeed?username="+streamName+"&password="
+        client.stream(0)
 #         except :
 #             print("error at streaming")
 #             leds.ledOf(Leds.Stream)

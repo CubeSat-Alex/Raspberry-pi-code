@@ -64,6 +64,6 @@ def increaseOrbit():
     numberOfSession += 1
     cache.add("orbit" ,numberOfSession )
     log.add(f"Orbit increase to {numberOfSession}" , LogState.Done)
-#     print(f"Number of orbit is {numberOfSession}")
+    print(f"Number of orbit is {numberOfSession}")
     
 repeat(increaseOrbit)

@@ -7,10 +7,9 @@ import json
 from orders import *
 from logs import *
 
-telemtryDelay = 0
-collect =True 
+telemtryDelay = 5
+collect = True 
 
- 
 class Telemtry():
     accelerationFile = "acceleration"
     pressureFile = "pressure"
@@ -88,6 +87,7 @@ class Telemtry():
         except :
             log.add("Collecting Telemtry data" , LogState.Error)
             return
+        
         if len(ttData) == 9 and len(adcsData) == 4 :
             self.newLoaction(ttData)
             self.newlights(ttData)
@@ -100,14 +100,14 @@ class Telemtry():
             self.lastData = {"TT" : ttData , "ADCS" : adcsData }
             print("Telemtery get done ")
             log.add("Collecting Telemtry data" , LogState.Done)
+    
             
-
-        
     def readFrom(self,slave,order):
         time.sleep(0.1)
         spi.write(order,slave)
         data = spi.read(slave)
-        print(data)
+        if data.find("{") != -1 :
+            print(data)
         data = data.replace( '":','": ').replace(',"' , ', "').replace(",}","}")
         data = json.loads(data.strip()[data.find('{'):])
         return data 

@@ -27,10 +27,10 @@ class Client:
             return 0
     
     frames = 0 
-    def sendFrame(self,frame):
+    def sendFrame(self,frame,isStream = False):
         self.frames = self.frames +  1
 #         print(self.frames)
-        frame = imutils.resize(frame,width=320)
+        frame = imutils.resize(frame,width= 480 if isStream else 320 )
         a = pickle.dumps(frame)
         message = struct.pack("Q",len(a))+a
         self.clientSocket.sendall(message)
